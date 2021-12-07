@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include <opencv2/aruco.hpp>
-// #include <aruco/include/opencv2/aruco.hpp>
+// #include <opencv2/aruco.hpp>
+#include <aruco/include/opencv2/aruco.hpp>
 
 
 int main(int argc, char *argv[])
