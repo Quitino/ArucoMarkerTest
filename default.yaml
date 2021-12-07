@@ -1,0 +1,39 @@
+%YAML:1.0 
+
+fx: 525.2866213437447
+fy: 525.2178123117577
+cx: 472.85738972861157
+cy: 264.77181506420266
+
+k1: 0.04160142651680036
+k2: -0.04771035303381654
+p1: -0.0032638387781624705
+p2: -0.003985120051161831
+k3: 0.01110263483766991
+
+rows: 540
+cols: 960
+
+
+adaptiveThreshWinSizeMin: 3
+adaptiveThreshWinSizeMax: 23
+adaptiveThreshWinSizeStep: 10
+adaptiveThreshWinSize: 21
+adaptiveThreshConstant: 7
+minMarkerPerimeterRate: 0.03
+maxMarkerPerimeterRate: 4.0
+polygonalApproxAccuracyRate: 0.05
+minCornerDistance: 10.0
+minDistanceToBorder: 3
+minMarkerDistance: 10.0
+minMarkerDistanceRate: 0.05
+cornerRefinementMethod: 0
+cornerRefinementWinSize: 5
+cornerRefinementMaxIterations: 30
+cornerRefinementMinAccuracy: 0.1
+markerBorderBits: 1
+perspectiveRemovePixelPerCell: 8
+perspectiveRemoveIgnoredMarginPerCell: 0.13
+maxErroneousBitsInBorderRate: 0.04
+minOtsuStdDev: 5.0
+errorCorrectionRate: 0.6
