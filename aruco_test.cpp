@@ -1,24 +1,43 @@
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
-#include <cv.h>
 #include <iostream>
-#include <highgui.h>
-#include <opencv2/aruco.hpp>
-#include <stdio.h>
+// #include <opencv2/aruco.hpp>
+#include <aruco/include/opencv2/aruco.hpp>
 
-using namespace cv;
-using namespace std;
+bool readDetectorParameters(std::string filename, cv::Ptr<cv::aruco::DetectorParameters> &params) {
+    cv::FileStorage fs(filename, cv::FileStorage::READ);
+    if(!fs.isOpened())
+        return false;
+    fs["adaptiveThreshWinSizeMin"] >> params->adaptiveThreshWinSizeMin;
+    fs["adaptiveThreshWinSizeMax"] >> params->adaptiveThreshWinSizeMax;
+    fs["adaptiveThreshWinSizeStep"] >> params->adaptiveThreshWinSizeStep;
+    fs["adaptiveThreshConstant"] >> params->adaptiveThreshConstant;
+    fs["minMarkerPerimeterRate"] >> params->minMarkerPerimeterRate;
+    fs["maxMarkerPerimeterRate"] >> params->maxMarkerPerimeterRate;
+    fs["polygonalApproxAccuracyRate"] >> params->polygonalApproxAccuracyRate;
+    fs["minCornerDistanceRate"] >> params->minCornerDistanceRate;
+    fs["minDistanceToBorder"] >> params->minDistanceToBorder;
+    fs["minMarkerDistanceRate"] >> params->minMarkerDistanceRate;
+    fs["cornerRefinementMethod"] >> params->cornerRefinementMethod;
+    fs["cornerRefinementWinSize"] >> params->cornerRefinementWinSize;
+    fs["cornerRefinementMaxIterations"] >> params->cornerRefinementMaxIterations;
+    fs["cornerRefinementMinAccuracy"] >> params->cornerRefinementMinAccuracy;
+    fs["markerBorderBits"] >> params->markerBorderBits;
+    fs["perspectiveRemovePixelPerCell"] >> params->perspectiveRemovePixelPerCell;
+    fs["perspectiveRemoveIgnoredMarginPerCell"] >> params->perspectiveRemoveIgnoredMarginPerCell;
+    fs["maxErroneousBitsInBorderRate"] >> params->maxErroneousBitsInBorderRate;
+    fs["minOtsuStdDev"] >> params->minOtsuStdDev;
+    fs["errorCorrectionRate"] >> params->errorCorrectionRate;
+    return true;
+}
 
 int main(int argc, char *argv[])
 {
     // read param
     std::string filename = "../default.yaml";
-    cv::FileStorage fs(filename, FileStorage::READ);
+    cv::FileStorage fs(filename, cv::FileStorage::READ);
     if (!fs.isOpened()) 
     {
-        cout << "failed to open file " << filename << endl;
+        std::cout << "failed to open file " << filename << std::endl;
         return false;
     }
     double fx, fy, cx, cy, k1, k2, p1, p2, k3;
@@ -40,47 +59,61 @@ int main(int argc, char *argv[])
 
     std::cout<<"cameraMatrixK: "<<cameraMatrix<<std::endl;
 
-    VideoCapture capture("../aruco_slam_data.mp4");
+    // read video
+    cv::VideoCapture capture("../aruco_slam_data.mp4");
     if(!capture.isOpened())
     {
-        cout<<"Movie open Error"<<endl;
+        std::cout<<"Movie open Error"<<std::endl;
         return -1;
     }
     double rate=capture.get(CV_CAP_PROP_FPS);
-    cout<<"帧率为:"<<" "<<rate<<endl;
-    cout<<"总帧数为:"<<" "<<capture.get(CV_CAP_PROP_FRAME_COUNT)<<endl;
-    Mat frame;
+    std::cout<<"FRAME_RATE:"<<" "<<rate<<std::endl;
+    std::cout<<"FRAME_COUNT:"<<" "<<capture.get(CV_CAP_PROP_FRAME_COUNT)<<std::endl;
+    cv::Mat frame;
     double position=0.0;
     capture.set(CV_CAP_PROP_POS_FRAMES,position);
 
-   cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::generateCustomDictionary(30, 4);
+    // for aruco
+    cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
+    bool readOk = readDetectorParameters( "../default.yaml", detectorParams);
+    if(!readOk) {
+        std::cerr << "Invalid detector parameters file" << std::endl;
+        return 0;
+    }
+    //override cornerRefinementMethod read from config file
+    detectorParams->cornerRefinementMethod = 1;
+    std::cout << "Corner refinement method (0: None, 1: Subpixel, 2:contour, 3: AprilTag 2): " << detectorParams->cornerRefinementMethod << std::endl;
 
-   while (capture.grab()) {
-       cv::Mat image, imageCopy;
+    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::generateCustomDictionary(30, 4);
+    // cv::Ptr<cv::aruco::Dictionary> dictionary =  cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+
+    while (capture.grab()) {
+        cv::Mat image, imageCopy;
         if(!capture.read(image))
             break;
-       image.copyTo(imageCopy);
-       std::vector<int> ids;
-       std::vector<std::vector<cv::Point2f>> corners;
+        image.copyTo(imageCopy);
+        std::vector<int> ids;
+        std::vector<std::vector<cv::Point2f>> corners;
 
-       cv::aruco::detectMarkers(image, dictionary, corners, ids);
-       // if at least one marker detected
-       if (ids.size() > 0) {
-           cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
-           std::vector<cv::Vec3d> rvecs, tvecs;
-           cv::aruco::estimatePoseSingleMarkers(corners, 0.14, cameraMatrix, distCoeffs, rvecs, tvecs);
-           cout<<"R :"<<rvecs[0]<<endl;
-           cout<<"T :"<<tvecs[0]<<endl;
-           // draw axis for each marker
-           for(int i=0; i<ids.size(); i++)
-               cv::aruco::drawAxis(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
-       }else{
-           std::cout<<"No marker detected!\n";
-       }
-       cv::imshow("out", imageCopy);
-       cv::waitKey(50);
-       //if (key == 27)1
-       // break;
-   }
+        // cv::aruco::detectMarkers(image, dictionary, corners, ids, detectorParams);
+        cv::aruco::detectMarkers(image, dictionary, corners, ids);
+        // if at least one marker detected
+        if (ids.size() > 0) {
+            cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
+            std::vector<cv::Vec3d> rvecs, tvecs;
+            cv::aruco::estimatePoseSingleMarkers(corners, 0.14, cameraMatrix, distCoeffs, rvecs, tvecs);
+            std::cout<<"R :"<<rvecs[0]<<std::endl;
+            std::cout<<"T :"<<tvecs[0]<<std::endl;
+            // draw axis for each marker
+            for(int i=0; i<ids.size(); i++)
+                cv::aruco::drawAxis(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
+        }else{
+            std::cout<<"No marker detected!\n";
+        }
+        cv::imshow("out", imageCopy);
+        cv::waitKey(50);
+        //if (key == 27)1
+        // break;
+    }
 return 0;
 }

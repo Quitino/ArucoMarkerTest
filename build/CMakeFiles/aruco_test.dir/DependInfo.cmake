@@ -11,9 +11,11 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/usr/include/eigen3"
+  "/usr/local/aruco-3.1.12/include"
+  "/usr/local/aruco-3.1.12/include/aruco"
   "../"
-  "/usr/local/opencv-3.1.0/include/opencv"
-  "/usr/local/opencv-3.1.0/include"
+  "/usr/local/opencv-3.4.15/include"
+  "/usr/local/opencv-3.4.15/include/opencv"
   )
 
 # Targets to which this target links.

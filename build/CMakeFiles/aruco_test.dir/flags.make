@@ -6,5 +6,5 @@ CXX_FLAGS =  -O3 -Wall   -g
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/usr/include/eigen3 -I/home/q/develop/DemoSet/ArucoMarkerTest -isystem /usr/local/opencv-3.1.0/include/opencv -isystem /usr/local/opencv-3.1.0/include 
+CXX_INCLUDES = -I/usr/include/eigen3 -I/usr/local/aruco-3.1.12/include -I/usr/local/aruco-3.1.12/include/aruco -I/home/q/develop/DemoSet/ArucoMarkerTest -isystem /usr/local/opencv-3.4.15/include -isystem /usr/local/opencv-3.4.15/include/opencv 
 
